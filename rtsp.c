@@ -232,6 +232,9 @@ int rtsp_cmd_describe(int sock, char *stream, char **sprop)
 
 int rtsp_cmd_describe_password(int sock, char *stream, char **sprop, char *buf)
 {
+    int n;
+    char *err;
+    int status;
     int size = 4096;
     // get nonce
     char *nonce_prefix="nonce=\"";
