@@ -29,6 +29,8 @@ struct rtsp_session {
 
 void password_encode(char *username, char *realm, char *password, char *nonce, char *cmd, char *uri, char *result);
 
+int rtsp_cmd_describe_password(int sock, char *stream, char **sprop, char *buf);
+
 
 /* Last Sender Report timestamp (middle 32 bits) */
 //uint32_t rtcp_last_sr_ts;
