@@ -58,7 +58,7 @@ int rtsp_cmd_describe_password(int sock, char *stream, char **sprop, char *buf);
 #define SETUP_TRNS_SERVER  "server_port="
 
 #define USERNAME "admin"
-#define PASSWORD "fudan201806077" 
+#define PASSWORD "fudan201806077"
 #define REALM "IP Camera(C1096)"
 
 
