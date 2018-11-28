@@ -36,6 +36,8 @@
 #include "rtcp.h"
 #include "rtp.h"
 #include "h264dec.h"
+#include "md5.h"
+
 
 void rtsp_cseq_inc()
 {
@@ -185,8 +187,12 @@ int rtsp_cmd_describe(int sock, char *stream, char **sprop)
     }
 
     status = rtsp_response_status(buf, &err);
+    rtsp_cseq_inc();
     if (status == 200) {
         RTSP_INFO("DESCRIBE: response status %i (%i bytes)\n", status, n);
+    }
+    else if (status == 401) {
+        return rtsp_cmd_describe_password(sock, stream, sprop, buf);
     }
     else {
         RTSP_INFO("DESCRIBE: response status %i: %s\n", status, err);
@@ -194,7 +200,6 @@ int rtsp_cmd_describe(int sock, char *stream, char **sprop)
     }
 
     DEBUG_RES("%s\n", buf);
-    rtsp_cseq_inc();
 
     /* set the DSP information */
     p = strstr(buf, "\r\n\r\n");
@@ -223,6 +228,105 @@ int rtsp_cmd_describe(int sock, char *stream, char **sprop)
     memcpy(*sprop, p + sizeof(RTP_SPROP) - 1, prop_size);
 
     return ret;
+}
+
+int rtsp_cmd_describe_password(int sock, char *stream, char **sprop, char *buf)
+{
+    int size = 4096;
+    // get nonce
+    char *nonce_prefix="nonce=\"";
+    char *start_pos = strstr(buf, nonce_prefix);
+    if (!start_pos) {
+        return -1;
+    }
+
+    char *end_pos = strchr(start_pos, '"');
+    if (!end_pos) {
+        return -1;
+    }
+
+    char *nonce = malloc(end_pos - start_pos + 1);
+    memset(nonce, 0, end_pos - start_pos + 1);
+    memcpy(nonce, start_pos + strlen(nonce_prefix), end_pos - start_pos - strlen(nonce_prefix));
+
+    // get response
+    // response = md5(md5(<username>:<realm>:<password>):<nonce>:md5(<cmd>:<uri>));
+    char response[33];
+    password_encode(USERNAME, REALM, PASSWORD, buf, "DESCRIBE", stream, response);
+    rtsp_cseq_inc();
+
+    char request[size];
+
+    n = snprintf(buf, size, CMD_DESCRIBE_PWD, stream, rtsp_cseq, USERNAME, REALM, nonce, stream, response);
+    DEBUG_REQ(buf);
+    n = send(sock, buf, n, 0);
+
+    RTSP_INFO("DESCRIBE_PWD: request sent\n");
+
+    memset(buf, '\0', sizeof(buf));
+    n = recv(sock, buf, size - 1, 0);
+    if (n <= 0) {
+        printf("Error: Server did not respond properly, closing...");
+        close(sock);
+        exit(EXIT_FAILURE);
+    }
+
+    status = rtsp_response_status(buf, &err);
+    if (status == 200) {
+        RTSP_INFO("DESCRIBE: response status %i (%i bytes)\n", status, n);
+    } else {
+        RTSP_INFO("DESCRIBE: response status %i: %s\n", status, err);
+        return -1;
+    }
+}
+
+void password_encode(char *username, char *realm, char *password, char *nonce, char *cmd, char *uri, char *result)
+{
+    char *buf_c = malloc(strlen(cmd) + strlen(uri) + 2);
+    strcpy(buf_c, cmd);
+    buf_c[strlen(cmd)] = ':';
+    strcpy(buf_c + strlen(cmd) + 1, uri);
+
+    char *buf_u = malloc(strlen(username) + strlen(realm) + strlen(password) + 3);
+    strcpy(buf_u, username);
+    buf_u[strlen(username)] = ':';
+    strcpy(buf_u + strlen(username) + 1, realm);
+    buf_u[strlen(username) + strlen(realm) + 1] = ':';
+    strcpy(buf_u + strlen(username) + strlen(realm) + 2, password);
+
+    char *buf = malloc(67 + strlen(nonce));
+    strcpy(buf + 33, nonce);
+
+    MD5_CTX md5;
+    unsigned char decrypt[16];
+
+    MD5Init(&md5);
+    MD5Update(&md5,(unsigned char *)buf_u,strlen(encrypt));
+    MD5Final(&md5,decrypt);
+    for(int i=0;i<16;i++)
+    {
+        sprintf(buf + 2 * i, "%02x",decrypt[i]);
+    }
+
+    MD5Init(&md5);
+    MD5Update(&md5,(unsigned char *)buf_c,strlen(encrypt));
+    MD5Final(&md5,decrypt);
+    for(int i=0;i<16;i++)
+    {
+        sprintf(buf + 34 + strlen(nonce) + 2 * i, "%02x",decrypt[i]);
+    }
+
+    buf[32] = ':';
+    buf[33 + strlen(nonce)] = ':';
+
+    MD5Init(&md5);
+    MD5Update(&md5,(unsigned char *)buf,strlen(encrypt));
+    MD5Final(&md5,decrypt);
+    for(int i=0;i<16;i++)
+    {
+        sprintf(result + 2 * i, "%02x",decrypt[i]);
+    }
+
 }
 
 int rtsp_cmd_setup(int sock, char *stream, struct rtsp_session *session)

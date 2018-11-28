@@ -37,6 +37,7 @@ struct rtsp_session {
 #define RTSP_RESPONSE     "RTSP/1.0 "
 #define CMD_OPTIONS       "OPTIONS rtsp://%s:%lu RTSP/1.0\r\nCSeq: %i\r\n\r\n"
 #define CMD_DESCRIBE      "DESCRIBE %s RTSP/1.0\r\nCSeq: %i\r\nAccept: application/sdp\r\n\r\n"
+#define CMD_DESCRIBE_PWD  "DESCRIBE %s RTSP/1.0\r\nCSeq: %i\r\nAuthorization: Digest username=\"%s\", realm=\"%s\", nonce=\"%s\", uri=\"%s\", response=\"%s\"\r\nAccept: application/sdp\r\n\r\n"
 
 //#define CMD_SETUP         "SETUP %s/trackID=1 RTSP/1.0\r\nCSeq: %i\r\nTransport: RTP/AVP;unicast;client_port=%i-%i\r\n\r\n"
 
@@ -50,5 +51,10 @@ struct rtsp_session {
 #define SETUP_SESSION      "Session: "
 #define SETUP_TRNS_CLIENT  "client_port="
 #define SETUP_TRNS_SERVER  "server_port="
+
+#define USERNAME "admin"
+#define PASSWORD "fudan201806077" 
+#define REALM "IP Camera(C1096)"
+
 
 #endif
