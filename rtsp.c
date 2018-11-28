@@ -252,10 +252,8 @@ int rtsp_cmd_describe_password(int sock, char *stream, char **sprop, char *buf)
     memset(nonce, 0, end_pos - start_pos + 1);
     memcpy(nonce, start_pos + strlen(nonce_prefix), end_pos - start_pos - strlen(nonce_prefix));
 
-    // get response
-    // response = md5(md5(<username>:<realm>:<password>):<nonce>:md5(<cmd>:<uri>));
     char response[33];
-    password_encode(USERNAME, REALM, PASSWORD, buf, "DESCRIBE", stream, response);
+    password_encode(USERNAME, REALM, PASSWORD, nonce, "DESCRIBE", stream, response);
     rtsp_cseq_inc();
 
     char request[size];
