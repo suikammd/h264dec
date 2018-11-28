@@ -257,21 +257,21 @@ int rtsp_cmd_describe_password(int sock, char *stream, char **sprop, char *buf)
 
     char request[size];
 
-    n = snprintf(buf, size, CMD_DESCRIBE_PWD, stream, rtsp_cseq, USERNAME, REALM, nonce, stream, response);
-    DEBUG_REQ(buf);
-    n = send(sock, buf, n, 0);
+    n = snprintf(request, size, CMD_DESCRIBE_PWD, stream, rtsp_cseq, USERNAME, REALM, nonce, stream, response);
+    DEBUG_REQ(request);
+    n = send(sock, request, n, 0);
 
     RTSP_INFO("DESCRIBE_PWD: request sent\n");
 
-    memset(buf, '\0', sizeof(buf));
-    n = recv(sock, buf, size - 1, 0);
+    memset(request, '\0', size);
+    n = recv(sock, request, size - 1, 0);
     if (n <= 0) {
         printf("Error: Server did not respond properly, closing...");
         close(sock);
         exit(EXIT_FAILURE);
     }
 
-    status = rtsp_response_status(buf, &err);
+    status = rtsp_response_status(request, &err);
     if (status == 200) {
         RTSP_INFO("DESCRIBE: response status %i (%i bytes)\n", status, n);
     } else {
