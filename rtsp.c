@@ -302,7 +302,7 @@ void password_encode(char *username, char *realm, char *password, char *nonce, c
     unsigned char decrypt[16];
 
     MD5Init(&md5);
-    MD5Update(&md5,(unsigned char *)buf_u,strlen(encrypt));
+    MD5Update(&md5,(unsigned char *)buf_u,strlen(buf_u));
     MD5Final(&md5,decrypt);
     for(int i=0;i<16;i++)
     {
@@ -310,7 +310,7 @@ void password_encode(char *username, char *realm, char *password, char *nonce, c
     }
 
     MD5Init(&md5);
-    MD5Update(&md5,(unsigned char *)buf_c,strlen(encrypt));
+    MD5Update(&md5,(unsigned char *)buf_c,strlen(buf_c));
     MD5Final(&md5,decrypt);
     for(int i=0;i<16;i++)
     {
@@ -321,7 +321,7 @@ void password_encode(char *username, char *realm, char *password, char *nonce, c
     buf[33 + strlen(nonce)] = ':';
 
     MD5Init(&md5);
-    MD5Update(&md5,(unsigned char *)buf,strlen(encrypt));
+    MD5Update(&md5,(unsigned char *)buf,strlen(buf));
     MD5Final(&md5,decrypt);
     for(int i=0;i<16;i++)
     {
