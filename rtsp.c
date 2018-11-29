@@ -93,13 +93,11 @@ int rtsp_response_status(char *response, char **error)
     char *sep;
     char *eol;
     *error = NULL;
-
     if (strncmp(response, RTSP_RESPONSE, offset) != 0) {
         *error = malloc(size);
         snprintf(*error, size, "Invalid RTSP response format");
         return -1;
     }
-
     sep = strchr(response + offset, ' ');
     if (!sep) {
         *error = malloc(size);
@@ -114,7 +112,6 @@ int rtsp_response_status(char *response, char **error)
     err_size = (eol - response) - offset - 1 - strlen(buf);
     *error = malloc(err_size + 1);
     strncpy(*error, response + offset + 1 + strlen(buf), err_size);
-
     return atoi(buf);
 }
 
@@ -180,6 +177,7 @@ int rtsp_cmd_describe(int sock, char *stream, char **sprop)
 
     memset(buf, '\0', sizeof(buf));
     n = recv(sock, buf, size - 1, 0);
+
     if (n <= 0) {
         printf("Error: Server did not respond properly, closing...");
         close(sock);
@@ -188,50 +186,53 @@ int rtsp_cmd_describe(int sock, char *stream, char **sprop)
 
     status = rtsp_response_status(buf, &err);
     rtsp_cseq_inc();
+
     if (status == 200) {
         RTSP_INFO("DESCRIBE: response status %i (%i bytes)\n", status, n);
     }
     else if (status == 401) {
-        return rtsp_cmd_describe_password(sock, stream, sprop, buf);
+        char request[size];
+        ret = rtsp_cmd_describe_password(sock, stream, sprop, buf, request);
+        DEBUG_RES("%s\n", request);
+
+        /* set the DSP information */
+        p = strstr(request, "\r\n\r\n");
+        if (!p) {
+            return -1;
+        }
+
+        /* Create buffer for DSP */
+        dsp = malloc(n + 1);
+        memset(dsp, '\0', n + 1);
+        strcpy(dsp, p + 4);
+
+        /* sprop-parameter-sets key */
+        p = strstr(dsp, RTP_SPROP);
+        if (!p) {
+            return -1;
+        }
+
+        end = strchr(p, '\r');
+        if (!end) {
+            return -1;
+        }
+
+        int prop_size = (end - p) - sizeof(RTP_SPROP) + 1;
+        *sprop = malloc(prop_size + 1);
+        memcpy(*sprop, p + sizeof(RTP_SPROP) - 1, prop_size);
+
+        return ret;
     }
     else {
         RTSP_INFO("DESCRIBE: response status %i: %s\n", status, err);
         ret = -1;
     }
-
-    DEBUG_RES("%s\n", buf);
-
-    /* set the DSP information */
-    p = strstr(buf, "\r\n\r\n");
-    if (!p) {
-        return -1;
-    }
-
-    /* Create buffer for DSP */
-    dsp = malloc(n + 1);
-    memset(dsp, '\0', n + 1);
-    strcpy(dsp, p + 4);
-
-    /* sprop-parameter-sets key */
-    p = strstr(dsp, RTP_SPROP);
-    if (!p) {
-        return -1;
-    }
-
-    end = strchr(p, '\r');
-    if (!end) {
-        return -1;
-    }
-
-    int prop_size = (end - p) - sizeof(RTP_SPROP) + 1;
-    *sprop = malloc(prop_size + 1);
-    memcpy(*sprop, p + sizeof(RTP_SPROP) - 1, prop_size);
-
-    return ret;
 }
 
-int rtsp_cmd_describe_password(int sock, char *stream, char **sprop, char *buf)
+int rtsp_cmd_describe_password(int sock, char *stream, char **sprop, char *buf, char *request)
 {
+    fflush(stdout);
+    int ret = 0;
     int n;
     char *err;
     int status;
@@ -240,11 +241,15 @@ int rtsp_cmd_describe_password(int sock, char *stream, char **sprop, char *buf)
     char *nonce_prefix="nonce=\"";
     char *start_pos = strstr(buf, nonce_prefix);
     if (!start_pos) {
+        printf("wrong start pos %s\n", start_pos);
+        fflush(stdout);
         return -1;
     }
 
-    char *end_pos = strchr(start_pos, '"');
+    char *end_pos = strstr(start_pos + strlen(nonce_prefix), "\"");
     if (!end_pos) {
+        printf("wrong end pos %s \n", end_pos);
+        fflush(stdout);
         return -1;
     }
 
@@ -256,7 +261,7 @@ int rtsp_cmd_describe_password(int sock, char *stream, char **sprop, char *buf)
     password_encode(USERNAME, REALM, PASSWORD, nonce, "DESCRIBE", stream, response);
     rtsp_cseq_inc();
 
-    char request[size];
+//    char request[size];
 
     n = snprintf(request, size, CMD_DESCRIBE_PWD, stream, rtsp_cseq, USERNAME, REALM, nonce, stream, response);
     DEBUG_REQ(request);
@@ -274,11 +279,13 @@ int rtsp_cmd_describe_password(int sock, char *stream, char **sprop, char *buf)
 
     status = rtsp_response_status(request, &err);
     if (status == 200) {
+        fflush(stdout);
         RTSP_INFO("DESCRIBE: response status %i (%i bytes)\n", status, n);
     } else {
         RTSP_INFO("DESCRIBE: response status %i: %s\n", status, err);
         return -1;
     }
+    return ret;
 }
 
 void password_encode(char *username, char *realm, char *password, char *nonce, char *cmd, char *uri, char *result)
@@ -615,6 +622,7 @@ int rtsp_loop()
 
      rtp_stats_reset();
      rtp_st.rtp_identifier = rtsp_s.session;
+     fflush(stdout);
      //rtsp_rtcp_reports(fd);
 
      /* H264 Parameters, taken from the SDP output */
