@@ -9,3 +9,5 @@ RTCP support is partially broken and not well defined,
 so some servers can complain about the stats and close
 the connections.
 
+* 增加rtsp auth部分，见rtsp_cmd_describe_password，可以
+在rtsp.h中配置USERNAME、PASSWORD、REALM

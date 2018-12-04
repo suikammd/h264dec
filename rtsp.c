@@ -231,7 +231,6 @@ int rtsp_cmd_describe(int sock, char *stream, char **sprop)
 
 int rtsp_cmd_describe_password(int sock, char *stream, char **sprop, char *buf, char *request)
 {
-    fflush(stdout);
     int ret = 0;
     int n;
     char *err;
@@ -609,6 +608,7 @@ int rtsp_loop()
 
      char *params;
      ret = rtsp_cmd_describe(fd, opt_stream, &params);
+     fflush(stdout);
      if (ret != 0) {
          printf("Error: Could not send DESCRIBE command to RTSP server\n");
          return -1;
@@ -622,7 +622,6 @@ int rtsp_loop()
 
      rtp_stats_reset();
      rtp_st.rtp_identifier = rtsp_s.session;
-     fflush(stdout);
      //rtsp_rtcp_reports(fd);
 
      /* H264 Parameters, taken from the SDP output */
@@ -647,10 +646,12 @@ int rtsp_loop()
      pps = malloc(p_size + 1);
      memset(pps, '\0', p_size + 1);
      memcpy(pps, sep + 1, p_size);
+    fflush(stdout);
 
      /* Decode each parameter */
      sps_dec = base64_decode((const unsigned char *) sps, strlen(sps), &sps_len);
      pps_dec = base64_decode((const unsigned char *) pps, strlen(pps), &pps_len);
+     fflush(stdout);
 
      free(sps);
      free(pps);
