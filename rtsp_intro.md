@@ -44,7 +44,10 @@ rtsp是应用层协议，定义传送的数据类型和编码格式（本文采�
 | TERMDOWN | ->  |        |
 |          | <-  | 200 OK |
 
+> 之后就可以接收到摄像头发送的视频流啦
 
+接下来就分析下数据流如何保存，以及数据分包之后如何合并
+![image](https://github.com/suikammd/h264dec/image/70d7e014656d65e1f1af8b0282055b8.png)
 
 
 
