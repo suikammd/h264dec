@@ -6,6 +6,7 @@
  */
 
 #define _GNU_SOURCE
+#define NUM_THREADS 7
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -19,11 +20,18 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <pthread.h>
 
 /* local headers */
 #include "rtsp.h"
 #include "streamer.h"
 #include "h264dec.h"
+
+struct params {
+    char *dump;
+    char *name;
+    char *stream;
+};
 
 void help(int status)
 {
@@ -43,8 +51,10 @@ void banner()
     printf("H264Dec v%s\n\n", VERSION);
 }
 
-int main(int argc, char **argv)
+int h264(void *arg)
 {
+    struct params *p;
+    p = (struct params *) arg;
      int opt;
 
      /* defaults */
@@ -55,6 +65,10 @@ int main(int argc, char **argv)
      stream_port = RTSP_PORT;
      client_port = RTSP_CLIENT_PORT;
      stream_dump = NULL;
+
+     opt_name = p->name;
+     stream_dump = p->dump;
+     opt_stream = p->stream;
 
      static const struct option long_opts[] = {
          { "stdout",  no_argument      , NULL, 'o' },
@@ -68,36 +82,36 @@ int main(int argc, char **argv)
          { NULL, 0, NULL, 0 }
      };
 
-     while ((opt = getopt_long(argc, argv, "od:s:p:n:vVh",
-                               long_opts, NULL)) != -1) {
-         switch (opt) {
-         case 'o':
-             opt_stdout = 1;
-             break;
-         case 'd':
-             stream_dump = strdup(optarg);
-             break;
-         case 's':
-             opt_stream = strdup(optarg);
-             break;
-         case 'p':
-             client_port = atoi(optarg);
-             break;
-         case 'n':
-             opt_name = strdup(optarg);
-             break;
-         case 'v':
-             banner();
-             exit(EXIT_SUCCESS);
-         case 'V':
-             opt_verbose = 1;
-             break;
-         case 'h':
-             help(EXIT_SUCCESS);
-         case '?':
-             help(EXIT_FAILURE);
-         }
-     }
+//     while ((opt = getopt_long(argc, argv, "od:s:p:n:vVh",
+//                               long_opts, NULL)) != -1) {
+//         switch (opt) {
+//         case 'o':
+//             opt_stdout = 1;
+//             break;
+//         case 'd':
+//             stream_dump = strdup(optarg);
+//             break;
+//         case 's':
+//             opt_stream = strdup(optarg);
+//             break;
+//         case 'p':
+//             client_port = atoi(optarg);
+//             break;
+//         case 'n':
+//             opt_name = strdup(optarg);
+//             break;
+//         case 'v':
+//             banner();
+//             exit(EXIT_SUCCESS);
+//         case 'V':
+//             opt_verbose = 1;
+//             break;
+//         case 'h':
+//             help(EXIT_SUCCESS);
+//         case '?':
+//             help(EXIT_FAILURE);
+//         }
+//     }
 
 
      if (!opt_stream || strncmp(opt_stream, PROTOCOL_PREFIX,
@@ -121,4 +135,48 @@ int main(int argc, char **argv)
 
 
      return 0;
+}
+
+//void test(void *arg) {
+//    struct params *p;
+//    p = (struct params *) arg;
+//    printf("####hahhahah\n");
+//    fflush(stdout);
+//    printf("#####input dump %s\n", (*p).dump);
+//    printf("#####input name %s", p->name);
+//    printf("#####input stream %s", p->stream);
+//    fflush(stdout);
+//}
+
+int main() {
+    pthread_t tids[NUM_THREADS];
+    struct params configs[NUM_THREADS];
+    struct params p;
+    memset(&p, 0, sizeof(p));
+    p.dump = "./test";
+    p.name = "ch1";
+    p.stream = "rtsp://192.168.64.164:554/h264/ch1/main/av_stream";
+    int ret;
+    for (int i = 0; i < NUM_THREADS; i++) {
+        configs[i] = p;
+    }
+
+
+    for (int j = 0; j < NUM_THREADS; j++) {
+        ret = pthread_create(&tids[j], NULL, h264, &configs[j]);
+        if (ret != 0) {
+            printf("pthread_create error: error_code = %d\n", j);
+            break;
+            fflush(stdout);
+        }
+        printf("Create thread %d successfully\n", j);
+        fflush(stdout);
+    }
+//    for (int i=0; i<NUM_THREADS; i++ ) {
+//        pthread_join( tids[i], NULL );
+//    }
+    pthread_exit(NULL);
+    sleep(5);
+    h264(&p);
+    return 0;
 }

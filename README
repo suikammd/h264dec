@@ -11,3 +11,5 @@ the connections.
 
 * 增加rtsp auth部分，见rtsp_cmd_describe_password，可以
 在rtsp.h中配置USERNAME、PASSWORD、REALM
+
+* 下面写了一些我对rtsp的理解 见[rtsp协议理解](https://github.com/suikammd/h264dec/blob/master/rtsp%E5%8D%8F%E8%AE%AE%E4%BB%8B%E7%BB%8D.md)
