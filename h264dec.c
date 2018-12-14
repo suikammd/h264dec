@@ -6,7 +6,7 @@
  */
 
 #define _GNU_SOURCE
-#define NUM_THREADS 7
+#define NUM_THREADS 1
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -136,17 +136,6 @@ int h264(void *arg)
 
      return 0;
 }
-
-//void test(void *arg) {
-//    struct params *p;
-//    p = (struct params *) arg;
-//    printf("####hahhahah\n");
-//    fflush(stdout);
-//    printf("#####input dump %s\n", (*p).dump);
-//    printf("#####input name %s", p->name);
-//    printf("#####input stream %s", p->stream);
-//    fflush(stdout);
-//}
 
 int main() {
     pthread_t tids[NUM_THREADS];

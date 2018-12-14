@@ -55,6 +55,7 @@ unsigned int rtp_parse(unsigned char *raw, unsigned int size)
     unsigned int paysize;
     unsigned char payload[MAX_BUF_SIZE];
     struct rtp_header rtp_h;
+//    unsigned char *payload_dec;
 
     rtp_h.version = raw[raw_offset] >> 6;
     rtp_h.padding = CHECK_BIT(raw[raw_offset], 5);
@@ -141,7 +142,9 @@ unsigned int rtp_parse(unsigned char *raw, unsigned int size)
         streamer_write_nal();
 
         /* Write NAL unit */
-        streamer_write(payload, sizeof(paysize));
+//        payload_dec = base64_decode((const unsigned char *) payload, strlen(payload), paysize);
+//        streamer_write(payload, sizeof(paysize));
+        streamer_write(payload, paysize);
     }
 
     /*

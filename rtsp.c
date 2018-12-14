@@ -608,7 +608,6 @@ int rtsp_loop()
 
      char *params;
      ret = rtsp_cmd_describe(fd, opt_stream, &params);
-     fflush(stdout);
      if (ret != 0) {
          printf("Error: Could not send DESCRIBE command to RTSP server\n");
          return -1;
@@ -646,14 +645,12 @@ int rtsp_loop()
      pps = malloc(p_size + 1);
      memset(pps, '\0', p_size + 1);
      memcpy(pps, sep + 1, p_size);
-    fflush(stdout);
 
-     /* Decode each parameter */
+    /* Decode each parameter */
      sps_dec = base64_decode((const unsigned char *) sps, strlen(sps), &sps_len);
      pps_dec = base64_decode((const unsigned char *) pps, strlen(pps), &pps_len);
-     fflush(stdout);
 
-     free(sps);
+    free(sps);
      free(pps);
 
      int channel;
@@ -675,10 +672,12 @@ int rtsp_loop()
      }
 
      /* write H264 header */
-     streamer_write_h264_header(sps_dec, sps_len, pps_dec, pps_len);
+     /* should delete*/
+//     streamer_write_h264_header(sps_dec, sps_len, pps_dec, pps_len);
 
      /* Create unix named pipe */
      stream_sock = streamer_prepare(opt_name, sps_dec, sps_len, pps_dec, pps_len);
+//    stream_sock = streamer_prepare(opt_name, sps, sps_len, pps, pps_len);
      if (stream_sock <= 0) {
          printf("Error: could not create unix socket\n\n");
          exit(EXIT_FAILURE);
@@ -734,6 +733,7 @@ int rtsp_loop()
 
          /* read incoming data */
          printf(">> RECV: max %i bytes\n", max_buf_size - raw_length);
+         fflush(stdout);
          r = recv(fd, raw + raw_length, max_buf_size - raw_length, 0);
          printf(">> READ: %i (up to %i)\n", r, max_buf_size - raw_length);
          fflush(stdout);
@@ -820,7 +820,7 @@ int rtsp_loop()
 
                     struct rtcp_pkg *rtcp;
 
-                    /* Decode RTCP packet(s) */
+                    /** Decode RTCP packet(s) /
                     rtcp = rtcp_decode(raw + raw_offset, rtp_length, &rtcp_count);
 
                     if (rtcp_count >= 1 && rtcp[0].type == RTCP_SR) {
