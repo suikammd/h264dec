@@ -17,5 +17,3 @@ the connections.
 > 上述参数配置完成后，编译完利用ffmpeg转换成MP4即可播放
 
 * 下面写了一些我对rtsp的理解 见[rtsp协议理解](https://github.com/suikammd/h264dec/blob/master/rtsp_intro.md)
-
-test
