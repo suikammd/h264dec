@@ -1,0 +1,18 @@
+# KDIR same core as arm core
+CROSS_COMPILE = arm-linux-
+ARCH:= arm
+CC:= $(CROSS_COMPILE)gcc
+LD:= $(CROSS_COMPILE)ld
+
+OBJ = streamer.o network.o base64.o utils.o rtp.o rtcp.o rtsp.o h264dec.o md5.o
+SOURCES = streamer.c network.c base64.c utils.c rtp.c rtcp.c rtsp.c h264dec.c md5.c
+KDIR = /usr/src/linux-headers-4.13.0-26-generic
+LIBS    = -lpthread
+PWD := $(shell pwd) 
+
+arm: $(OBJ)
+	$(CC) -static -o $@ $(OBJ) $(LIBS)
+#	$(CC) -static -Wall -O2 -c -o $@ $<
+
+clean:
+	-rm -rf *~ *.o rtsp

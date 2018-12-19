@@ -51,7 +51,7 @@ void banner()
     printf("H264Dec v%s\n\n", VERSION);
 }
 
-int h264(void *arg)
+void * h264(void *arg)
 {
     struct params *p;
     p = (struct params *) arg;
@@ -132,9 +132,6 @@ int h264(void *arg)
          sleep(5);
          exit(1);
      }
-
-
-     return 0;
 }
 
 int main() {
@@ -146,13 +143,15 @@ int main() {
     p.name = "ch1";
     p.stream = "rtsp://192.168.64.164:554/h264/ch1/main/av_stream";
     int ret;
-    for (int i = 0; i < NUM_THREADS; i++) {
+    int i;
+    for (i = 0; i < NUM_THREADS; i++) {
         configs[i] = p;
     }
 
 
-    for (int j = 0; j < NUM_THREADS; j++) {
-        ret = pthread_create(&tids[j], NULL, h264, &configs[j]);
+    int j;
+    for (j = 0; j < NUM_THREADS; j++) {
+        ret = pthread_create(&tids[j], NULL, h264, (void *)&configs[j]);
         if (ret != 0) {
             printf("pthread_create error: error_code = %d\n", j);
             break;
