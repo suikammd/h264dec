@@ -165,6 +165,6 @@ int main() {
 //    }
     pthread_exit(NULL);
     sleep(5);
-    h264(&p);
+//    h264(&p);
     return 0;
 }
