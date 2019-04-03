@@ -82,6 +82,7 @@ void * h264(void *arg)
          { NULL, 0, NULL, 0 }
      };
 
+
 //     while ((opt = getopt_long(argc, argv, "od:s:p:n:vVh",
 //                               long_opts, NULL)) != -1) {
 //         switch (opt) {

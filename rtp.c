@@ -136,7 +136,7 @@ unsigned int rtp_parse(unsigned char *raw, unsigned int size)
 
     /* Single NAL unit packet */
     if (nal_type >= NAL_TYPE_SINGLE_NAL_MIN &&
-        nal_type <= NAL_TYPE_SINGLE_NAL_MAX) {
+        nal_type <= NAL_TYPE_SINGLE_NAL_MAX && (nal_type == 7 || nal_type == 8 || nal_type == 6)) {
 
         /* Write NAL header */
         streamer_write_nal();
@@ -202,6 +202,7 @@ unsigned int rtp_parse(unsigned char *raw, unsigned int size)
         }
     }
     else if (nal_type == NAL_TYPE_FU_A) {
+        goto label;
         printf("         >> Fragmentation Unit\n");
 
         uint8_t *q;
@@ -234,6 +235,8 @@ unsigned int rtp_parse(unsigned char *raw, unsigned int size)
         raw_offset++;
 
     }
+
+    label:
     raw_offset += paysize;
 
     if (rtp_h.seq > rtp_st.highest_seq) {
